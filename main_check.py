@@ -13,10 +13,10 @@ from dotenv import load_dotenv
 import os
 
 
-# Завантажуємо .env файл
+# Load environment variables from .env
 load_dotenv()
 
-# Отримуємо змінні з .env файлу
+# CONFIG
 DOMAIN = os.getenv("DOMAIN")
 PATTERN_1 = os.getenv("PATTERN_1")
 PATTERN_2 = os.getenv("PATTERN_2")
@@ -31,7 +31,8 @@ KEY = os.getenv("SCRAPFLY_KEY")
 app = Flask(__name__)
 
 
-# API_1 Документація в файлі API_DOC.md   /validator/check-info
+# API_1 Endpoint: /validator/check-info
+# Full documentation available in API_DOC.md
 @app.route("/check-info", methods=["POST"])
 def check_info():
 
@@ -57,7 +58,7 @@ def check_info():
     with open("check_info.log", "a", encoding="utf-8") as log_file:
         log_file.write(f"\n\n {current_datetime} Check_info log\n Contact_id: {contact_id}\n User_url: {user_url}\n")
 
-    # Компіляція регулярних виразів
+    # Create regex
     regex_1 = re.compile(PATTERN_1)
     regex_2 = re.compile(PATTERN_2)
 
@@ -134,9 +135,9 @@ def check_info():
 
             return jsonify(result_error), 400
 
-        # один з варіантів виникнення цієї ситуації - чек справжній є, але він ще не відобразився на сайті,
-        # тому інформація по ньому поки що недоступна для скраппінгу.
-        # Тоді беремо інформацію з url для чеків зі слешами (pattern_2)
+        # one possible reason for this situation is that the receipt is real, but it hasn't appeared on the website yet,
+        # so the information is currently unavailable for scraping.
+        # In this case, we extract information from the receipt URL with slashes (pattern_2)
         if form_tag.find('div', class_='grid grid-cols-1 md:grid-cols-3 '
                                        'lg:grid-cols-3 rounded-lg bg-white shadow sm:mt-4 py-5') is None:
 
@@ -217,7 +218,7 @@ def check_info():
             if div_tags[i].text.strip() == dots_divider:
                 dots_index.append(i)
 
-        # якщо оплата картою, то розділювачів в чеку було 6 шт
+        # if the payment was made by card, there were 6 separators in the receipt
         if len(dots_index) == 6:
 
             # Find indexes for needed information
@@ -301,7 +302,7 @@ def check_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і була решта, то розділювачів в чеку було 7 шт
+        # if the payment was in cash and there was change (решта), there were 7 separators in the receipt
         elif len(dots_index) == 7:
 
             # Find indexes for needed information
@@ -322,7 +323,7 @@ def check_info():
             receipt_info_index_start = dots_index[5] + 1
             receipt_info_index_end = dots_index[6] - 1
 
-            check_number_index = dots_index[6] + 1  # NEW
+            check_number_index = dots_index[6] + 1
 
             # items here
 
@@ -390,7 +391,7 @@ def check_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і картою, і була решта, то розділювачів в чеку було 8 шт
+        # if the payment was made in both cash and card, and there was change, there were 8 separators in the receipt
         elif len(dots_index) == 8:
 
             # Find indexes for needed information
@@ -413,7 +414,7 @@ def check_info():
             receipt_info_index_start = dots_index[6] + 1
             receipt_info_index_end = dots_index[7] - 1
 
-            check_number_index = dots_index[7] + 1  # NEW
+            check_number_index = dots_index[7] + 1
 
             # items here
 
@@ -481,7 +482,7 @@ def check_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # інша кількість розділювачів
+        # some other number of separators
         else:
 
             result_error = {"company_name": company_name,
@@ -526,7 +527,7 @@ def check_info():
 
         return jsonify(result_json)
 
-    # якщо скраппінг неуспішний
+    # if scraping is unsuccessful
 
     # Handles timeout-specific issues
     except httpx.ConnectTimeout:
@@ -604,7 +605,8 @@ def check_info():
         return jsonify(result_error), 500
 
 
-# API_2 Документація в файлі API_DOC.md   /validator/check-full-info
+# API_2 Endpoint: /validator/check-full-info
+# Full documentation available in API_DOC.md
 @app.route("/check-full-info", methods=["POST"])
 def check_full_info():
 
@@ -630,7 +632,7 @@ def check_full_info():
     with open("check_info.log", "a", encoding="utf-8") as log_file:
         log_file.write(f"\n\n {current_datetime} Check_info log\n Contact_id: {contact_id}\n User_url: {user_url}\n")
 
-    # Компіляція регулярних виразів
+    # Compile a regex
     regex_1 = re.compile(PATTERN_1)
     regex_2 = re.compile(PATTERN_2)
 
@@ -706,9 +708,9 @@ def check_full_info():
 
             return jsonify(result_error), 400
 
-        # один з варіантів виникнення цієї ситуації - чек справжній є, але він ще не відобразився на сайті,
-        # тому інформація по ньому поки що недоступна для скраппінгу.
-        # Тоді беремо інформацію з url для чеків зі слешами (pattern_2)
+        # one possible reason for this situation is that the receipt is real, but it hasn't appeared on the website yet,
+        # so the information is currently unavailable for scraping.
+        # In this case, we extract information from the receipt URL with slashes (pattern_2)
         if form_tag.find('div', class_='grid grid-cols-1 md:grid-cols-3 '
                                        'lg:grid-cols-3 rounded-lg bg-white shadow sm:mt-4 py-5') is None:
 
@@ -789,7 +791,7 @@ def check_full_info():
             if div_tags[i].text.strip() == dots_divider:
                 dots_index.append(i)
 
-        # якщо оплата картою, то розділювачів в чеку було 6 шт
+        # if the payment was made by card, there were 6 separators in the receipt
         if len(dots_index) == 6:
 
             # Find indexes for needed information
@@ -899,7 +901,7 @@ def check_full_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і була решта, то розділювачів в чеку було 7 шт
+        # if the payment was in cash and there was change, there were 7 separators in the receipt
         elif len(dots_index) == 7:
 
             # Find indexes for needed information
@@ -1014,7 +1016,7 @@ def check_full_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і картою, і була решта, то розділювачів в чеку було 8 шт
+        # if the payment was made in both cash and card, and there was change, there were 8 separators in the receipt
         elif len(dots_index) == 8:
 
             # Find indexes for needed information
@@ -1131,7 +1133,7 @@ def check_full_info():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # інша кількість розділювачів
+        # a different number of separators
         else:
 
             result_error = {"company_name": company_name,
@@ -1177,7 +1179,7 @@ def check_full_info():
 
         return jsonify(result_json)
 
-    # якщо скраппінг неуспішний
+    # if scraping is unsuccessful
 
     # Handles timeout-specific issues
     except httpx.ConnectTimeout:
@@ -1255,7 +1257,8 @@ def check_full_info():
         return jsonify(result_error), 500
 
 
-# API_3 Документація в файлі API_DOC.md   /validator/check-info-scrapfly
+# API_3 Endpoint: /validator/check-info-scrapfly
+# Full documentation available in API_DOC.md
 @app.route("/check-info-scrapfly", methods=["POST"])
 def check_info_scrapfly():
 
@@ -1269,7 +1272,7 @@ def check_info_scrapfly():
     with open("scrapfly_check_info.log", "a", encoding="utf-8") as log_file:
         log_file.write(f"\n\n {current_datetime} Check_info SCRAPFLY log\n Contact_id: {contact_id}\n User_url: {user_url}\n")
 
-    # Компіляція регулярних виразів
+    # Compile regex
     regex_1 = re.compile(PATTERN_1)
     regex_2 = re.compile(PATTERN_2)
 
@@ -1354,9 +1357,9 @@ def check_info_scrapfly():
 
             return jsonify(result_error), 400
 
-        # один з варіантів виникнення цієї ситуації - чек справжній є, але він ще не відобразився на сайті,
-        # тому інформація по ньому поки що недоступна для скраппінгу.
-        # Тоді беремо інформацію з url для чеків зі слешами (pattern_2)
+        # one possible reason for this situation is that the receipt is real, but it hasn't appeared on the website yet,
+        # so the information is currently unavailable for scraping.
+        # In this case, we extract information from the receipt URL with slashes (pattern_2)
         if form_tag.find('div', class_='grid grid-cols-1 md:grid-cols-3 '
                                    'lg:grid-cols-3 rounded-lg bg-white shadow sm:mt-4 py-5') is None:
             if re.search(regex_1, user_url):
@@ -1436,7 +1439,7 @@ def check_info_scrapfly():
             if div_tags[i].text.strip() == dots_divider:
                 dots_index.append(i)
 
-        # якщо оплата картою, то розділювачів в чеку було 6 шт
+        # if the payment was made by card, there were 6 separators in the receipt
         if len(dots_index) == 6:
 
             # Find indexes for needed information
@@ -1519,7 +1522,7 @@ def check_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і була решта, то розділювачів в чеку було 7 шт
+        # if the payment was in cash and there was change, there were 7 separators in the receipt
         elif len(dots_index) == 7:
 
             # Find indexes for needed information
@@ -1609,7 +1612,7 @@ def check_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і картою, і була решта, то розділювачів в чеку було 8 шт
+        # if the payment was made in both cash and card, and there was change, there were 8 separators in the receipt
         elif len(dots_index) == 8:
 
             # Find indexes for needed information
@@ -1701,7 +1704,7 @@ def check_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # інша кількість розділювачів
+        # a different number of separators
         else:
 
             result_error = {"company_name": company_name,
@@ -1746,7 +1749,7 @@ def check_info_scrapfly():
 
         return jsonify(result_json)
 
-    # якщо скраппінг неуспішний
+    # if scraping is unsuccessful
 
     # Handles timeout-specific issues
     except httpx.ConnectTimeout:
@@ -1824,7 +1827,8 @@ def check_info_scrapfly():
         return jsonify(result_error), 500
 
 
-# API_4 Документація в файлі API_DOC.md   /validator/check-full-info-scrapfly
+# API_4 Endpoint: /validator/check-full-info-scrapfly
+# Full documentation available in API_DOC.md
 @app.route("/check-full-info-scrapfly", methods=["POST"])
 def check_full_info_scrapfly():
 
@@ -1838,7 +1842,7 @@ def check_full_info_scrapfly():
     with open("scrapfly_check_info.log", "a", encoding="utf-8") as log_file:
         log_file.write(f"\n\n {current_datetime} Check_info SCRAPFLY log\n Contact_id: {contact_id}\n User_url: {user_url}\n")
 
-    # Компіляція регулярних виразів
+    # Compile regex
     regex_1 = re.compile(PATTERN_1)
     regex_2 = re.compile(PATTERN_2)
 
@@ -1923,9 +1927,9 @@ def check_full_info_scrapfly():
 
             return jsonify(result_error), 400
 
-        # один з варіантів виникнення цієї ситуації - чек справжній є, але він ще не відобразився на сайті,
-        # тому інформація по ньому поки що недоступна для скраппінгу.
-        # Тоді беремо інформацію з url для чеків зі слешами (pattern_2)
+        # one possible reason for this situation is that the receipt is real, but it hasn't appeared on the website yet,
+        # so the information is currently unavailable for scraping.
+        # In this case, we extract information from the receipt URL with slashes (pattern_2)
         if form_tag.find('div', class_='grid grid-cols-1 md:grid-cols-3 '
                                    'lg:grid-cols-3 rounded-lg bg-white shadow sm:mt-4 py-5') is None:
             if re.search(regex_1, user_url):
@@ -2005,7 +2009,7 @@ def check_full_info_scrapfly():
             if div_tags[i].text.strip() == dots_divider:
                 dots_index.append(i)
 
-        # якщо оплата картою, то розділювачів в чеку було 6 шт
+        # if the payment was made by card, there were 6 separators in the receipt
         if len(dots_index) == 6:
 
             # Find indexes for needed information
@@ -2113,7 +2117,7 @@ def check_full_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і була решта, то розділювачів в чеку було 7 шт
+        # if the payment was in cash and there was change, there were 7 separators in the receipt
         elif len(dots_index) == 7:
 
             # Find indexes for needed information
@@ -2228,7 +2232,7 @@ def check_full_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # якщо оплата готівкою і картою, і була решта, то розділювачів в чеку було 8 шт
+        # if the payment was made in both cash and card, and there was change, there were 8 separators in the receipt
         elif len(dots_index) == 8:
 
             # Find indexes for needed information
@@ -2345,7 +2349,7 @@ def check_full_info_scrapfly():
             check_number_tag = div_tags[check_number_index]
             check_number = check_number_tag.find('span', class_='text-base font-medium').get_text(strip=True)
 
-        # інша кількість розділювачів
+        # a different number of separators
         else:
 
             result_error = {"company_name": company_name,
@@ -2390,7 +2394,7 @@ def check_full_info_scrapfly():
 
         return jsonify(result_json)
 
-    # якщо скраппінг неуспішний
+    # if scraping is unsuccessful
 
     # Handles timeout-specific issues
     except httpx.ConnectTimeout:
